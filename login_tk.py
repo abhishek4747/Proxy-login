@@ -3,7 +3,7 @@ from datetime import datetime
 import urllib2,urllib,sys,threading,webbrowser
 
 class Proxy:
-    proxy_set={'btech':22,'dual':62,'diit':21,'faculty':82,'integrated':21,'mtech':62,'phd':61,'retfaculty':82,'staff':21,'irdstaff':21,'mba':21,'mdes':21,'msc':21,'msr':21,'pgdip':21}
+	proxy_set={'btech':22,'dual':62,'diit':21,'faculty':82,'integrated':21,'mtech':62,'phd':61,'retfaculty':82,'staff':21,'irdstaff':21,'mba':21,'mdes':21,'msc':21,'msr':21,'pgdip':21}
 	google = 'http://www.google.com'
 	def __init__(self, username, password, proxy_cat):
 		self.username = username

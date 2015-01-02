@@ -1,9 +1,13 @@
+#!/usr/bin/env python
+import sys
+import signal
+import time
 from getpass import getpass
 from datetime import datetime
 import urllib2,urllib,sys,threading,webbrowser
 
 class Proxy:
-    proxy_set={'btech':22,'dual':62,'diit':21,'faculty':82,'integrated':21,'mtech':62,'phd':61,'retfaculty':82,'staff':21,'irdstaff':21,'mba':21,'mdes':21,'msc':21,'msr':21,'pgdip':21}
+	proxy_set={'btech':22,'dual':62,'diit':21,'faculty':82,'integrated':21,'mtech':62,'phd':61,'retfaculty':82,'staff':21,'irdstaff':21,'mba':21,'mdes':21,'msc':21,'msr':21,'pgdip':21}
 	google = 'http://www.google.com'
 	def __init__(self, username, password, proxy_cat):
 		self.username = username
@@ -33,7 +37,6 @@ class Proxy:
 		try:
 			response = self.open_page(self.proxy_page_address)
 		except Exception, e:
-			print "hello"
 			return None
 		check_token='sessionid" type="hidden" value="'
 		token_index=response.index(check_token) + len(check_token)
@@ -55,16 +58,19 @@ class Proxy:
 			return "Incorrect", response
 		elif "You are logged in successfully as "+self.username in response:
 			def ref():
-				res = user.refresh()
-				if res=='Success':
-					self.top_label.config(text=user.username)
-					threading.Timer(100.0,ref).start()
-				elif res=='Session Expired':
-					print "Session Expired Run Script again"
-				else:
-					threading.Timer(10.0,self.ref).start()
-				print "Refresh",res,datetime.now()
-			threading.Timer(60.0,ref).start()
+				if not self.loggedout:
+					res = self.refresh()
+					print "Refresh",datetime.now()
+					if res=='Session Expired':
+						print "Session Expired Run Script again"
+					else:
+						self.timer = threading.Timer(10.0,ref)
+						self.timer.daemon = True
+						self.timer.start()
+			self.timer = threading.Timer(60.0,ref)
+			self.timer.daemon = True
+			self.timer.start()
+			self.loggedout = False
 			return "Success", response
 		elif "already logged in" in response:
 			return "Already", response
@@ -74,6 +80,7 @@ class Proxy:
 			return "Not Connected", response
 
 	def logout(self):
+		self.loggedout = True
 		response = self.submitform(self.logout_form)
 		if "you have logged out from the IIT Delhi Proxy Service" in response:
 			return "Success", response
@@ -96,7 +103,8 @@ class Proxy:
 
 	def details(self):
 		for property, value in vars(self).iteritems():
-			print property, ": ", value
+			if VERBOSE:
+				print property, ": ", value
 
 	def submitform(self, form):
 		return self.urlopener.open(urllib2.Request(self.proxy_page_address,urllib.urlencode(form))).read()
@@ -104,7 +112,23 @@ class Proxy:
 	def open_page(self, address):
 		return self.urlopener.open(address).read()
 
-user = Proxy(username='cs5110272', password='yourPasswordHere', proxy_cat='dual')
-print user.login()[0] #for logging in
+STATUS = 0
+RESPONSE = 1
+VERBOSE = False
 
+def signal_handler(signal, frame):
+        print '\nLogout',user.logout()[STATUS]
+        sys.exit(0)
+signal.signal(signal.SIGINT, signal_handler)
 
+if __name__=="__main__":
+	n = len(sys.argv)
+	if n==1:
+		print "\n\nUsage: python login_terminal.py username password proxy_category\n\n"
+	else:
+		uname = sys.argv[1] if n>1 else 'yourUsernameHere'
+		passwd = sys.argv[2] if n>2 else 'yourPasswordHere'
+		proxycat = sys.argv[3] if n>3 else 'dual'
+		user = Proxy(username=uname, password=passwd, proxy_cat=proxycat)
+		print '\nLogin',user.login()[STATUS] #for logging in
+		signal.pause()
