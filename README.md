@@ -6,9 +6,9 @@ This is a script which automatically log into the IITD proxy using your user id 
 
 ## Usage
 
-`python login_terminal.py username password proxy_category`
+`python login-terminal.py username password proxy_category`
 
-Ctrl-C to logout.
+`Ctrl-C` to logout.
 
 
 
